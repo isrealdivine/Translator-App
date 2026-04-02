@@ -1,58 +1,54 @@
 import streamlit as st
 from deep_translator import GoogleTranslator
+from gtts import gTTS
+import os
 
-# Set up the page
-st.set_page_config(page_title="AI Mini-Translator", page_icon="🌍")
+# Page Config
+st.set_page_config(page_title="AI Voice Translator", page_icon="🌐")
 
-st.title("🌍 AI Mini-Translator")
-st.markdown("Translate text between languages instantly using Google Translate technology.")
+st.title("🌐 AI Voice Translator")
+st.write("Translate and hear the pronunciation instantly.")
 
-# Language selection
-# We'll create a dictionary of some popular languages
+# Language dictionary (Mapping for translator and gTTS)
 languages_dict = {
-    'English': 'en',
-    'French': 'fr',
-    'Spanish': 'es',
-    'German': 'de',
-    'Yoruba': 'yo',
-    'Igbo': 'ig',
-    'Hausa': 'ha',
-    'Arabic': 'ar',
-    'Chinese': 'zh-CN',
-    'Portuguese': 'pt'
+    'English': 'en', 'French': 'fr', 'Spanish': 'es', 'German': 'de', 
+    'Yoruba': 'yo', 'Igbo': 'ig', 'Hausa': 'ha', 'Arabic': 'ar', 
+    'Chinese': 'zh-CN', 'Portuguese': 'pt', 'Russian': 'ru', 'Japanese': 'ja'
 }
 
-# Create two columns for language selection
-col1, col2 = st.columns(2)
+# Input Section
+text_to_translate = st.text_area("What should I translate?", placeholder="Enter text here...", height=150)
 
-with col1:
-    source_lang = st.selectbox("From (Source Language)", options=list(languages_dict.keys()), index=0)
+# Target language selection
+target_lang_name = st.selectbox("Translate to:", options=list(languages_dict.keys()), index=4)
+target_lang_code = languages_dict[target_lang_name]
 
-with col2:
-    target_lang = st.selectbox("To (Target Language)", options=list(languages_dict.keys()), index=1)
-
-# Text input
-text_to_translate = st.text_area("Enter text to translate:", height=150, placeholder="Type something here...")
-
-# Translation logic
-if st.button("Translate Now"):
+if st.button("✨ Magic Translate & Speak"):
     if text_to_translate.strip() == "":
         st.warning("Please enter some text first!")
     else:
         try:
-            # Initialize the translator
-            translator = GoogleTranslator(source=languages_dict[source_lang], target=languages_dict[target_lang])
-            
-            # Perform translation
+            # 1. Translation
+            translator = GoogleTranslator(source='auto', target=target_lang_code)
             translation = translator.translate(text_to_translate)
             
-            # Display results
             st.markdown("---")
             st.subheader("Result:")
             st.success(translation)
             
+            # 2. Text-to-Speech Logic
+            # gTTS handles most languages, but we wrap it in a try-block just in case
+            tts = gTTS(text=translation, lang=target_lang_code)
+            tts.save("speech.mp3")
+            
+            # 3. Audio Player
+            st.audio("speech.mp3", format="audio/mp3")
+            
+            # Clean up the file after playing (optional but good practice)
+            os.remove("speech.mp3")
+            
         except Exception as e:
-            st.error(f"An error occurred: {e}")
+            st.error(f"Error: {e}. Note: Some languages may not support voice yet.")
 
 st.markdown("---")
-st.caption("Built with ❤️ using Streamlit and Deep-Translator")
+st.info("Tip: After translating, press the 'Play' button on the audio bar to hear the pronunciation!")
